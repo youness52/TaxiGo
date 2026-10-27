@@ -1,0 +1,145 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "User profile with contact info, role (passenger/driver), and wallet balance",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "The unique Firebase Auth UID" },
+        "displayName": { "type": "string", "description": "User display name" },
+        "email": { "type": "string", "description": "User email address" },
+        "phoneNumber": { "type": "string", "description": "Contact phone number" },
+        "walletBalance": { "type": "number", "description": "Current in-app digital wallet credit balance" },
+        "rating": { "type": "number", "description": "Passenger or driver rating average" },
+        "totalRides": { "type": "number", "description": "Total completed rides" },
+        "role": { "type": "string", "description": "passenger or driver" },
+        "isOnline": { "type": "boolean", "description": "Online availability state for drivers" },
+        "driverVehicle": { "type": "string", "description": "Driver vehicle make, model and color" },
+        "driverEarnings": { "type": "number", "description": "Driver accumulated earnings in USD" },
+        "driverTrips": { "type": "number", "description": "Total completed driver trips" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp submitted as FieldValue.serverTimestamp()" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Timestamp submitted as FieldValue.serverTimestamp()" }
+      },
+      "required": ["userId", "displayName", "email", "walletBalance", "createdAt"]
+    },
+    "Ride": {
+      "title": "Ride",
+      "description": "Active or historical taxi ride with live telemetry and status",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Passenger UID" },
+        "pickupAddress": { "type": "string", "description": "Pickup street address" },
+        "pickupLat": { "type": "number", "description": "Pickup latitude" },
+        "pickupLng": { "type": "number", "description": "Pickup longitude" },
+        "destinationAddress": { "type": "string", "description": "Destination street address" },
+        "destinationLat": { "type": "number", "description": "Destination latitude" },
+        "destinationLng": { "type": "number", "description": "Destination longitude" },
+        "rideTier": { "type": "string", "description": "Ride tier e.g. economy, comfort, green, xl, executive" },
+        "fare": { "type": "number", "description": "Calculated or negotiated trip fare in USD" },
+        "offeredFare": { "type": "number", "description": "Passenger suggested or offered fare" },
+        "tip": { "type": "number", "description": "Driver tip in USD" },
+        "paymentMethod": { "type": "string", "description": "Selected payment method card, google_pay, wallet, cash" },
+        "status": { "type": "string", "description": "Current ride state: SEARCHING, DRIVER_ASSIGNED, EN_ROUTE_PICKUP, ARRIVED, IN_TRIP, COMPLETED, CANCELLED" },
+        "driverId": { "type": "string", "description": "Assigned driver UID" },
+        "driverName": { "type": "string", "description": "Driver full name" },
+        "driverRating": { "type": "number", "description": "Driver star rating" },
+        "driverPhone": { "type": "string", "description": "Driver phone number" },
+        "carModel": { "type": "string", "description": "Vehicle make and model" },
+        "carColor": { "type": "string", "description": "Vehicle exterior color" },
+        "licensePlate": { "type": "string", "description": "Vehicle registration plate" },
+        "passengerName": { "type": "string", "description": "Passenger name for driver view" },
+        "passengerRating": { "type": "number", "description": "Passenger rating" },
+        "driverLat": { "type": "number", "description": "Current real-time vehicle latitude" },
+        "driverLng": { "type": "number", "description": "Current real-time vehicle longitude" },
+        "etaMinutes": { "type": "number", "description": "Estimated arrival time in minutes" },
+        "speedKmh": { "type": "number", "description": "Real-time car speed in km/h" },
+        "ratingGiven": { "type": "number", "description": "Passenger star rating for this trip (0-5)" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp submitted as FieldValue.serverTimestamp()" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Timestamp submitted as FieldValue.serverTimestamp()" }
+      },
+      "required": ["userId", "pickupAddress", "destinationAddress", "rideTier", "fare", "paymentMethod", "status", "createdAt"]
+    },
+    "PaymentMethod": {
+      "title": "Payment Method",
+      "description": "Stored payment method (credit card, digital wallet, cash)",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner UID" },
+        "type": { "type": "string", "description": "card, google_pay, wallet, cash" },
+        "cardBrand": { "type": "string", "description": "visa, mastercard, amex, discover, or other" },
+        "lastFour": { "type": "string", "description": "Last 4 digits of card" },
+        "expiryMonth": { "type": "string", "description": "Card expiration month MM" },
+        "expiryYear": { "type": "string", "description": "Card expiration year YY" },
+        "cardholderName": { "type": "string", "description": "Cardholder full name" },
+        "isDefault": { "type": "boolean", "description": "Default payment method indicator" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp submitted as FieldValue.serverTimestamp()" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Timestamp submitted as FieldValue.serverTimestamp()" }
+      },
+      "required": ["userId", "type", "isDefault", "createdAt"]
+    },
+    "Receipt": {
+      "title": "Payment Receipt",
+      "description": "Itemized trip invoice and payment confirmation",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Passenger UID" },
+        "rideId": { "type": "string", "description": "Associated ride document ID" },
+        "pickupAddress": { "type": "string", "description": "Pickup address" },
+        "destinationAddress": { "type": "string", "description": "Destination address" },
+        "rideTier": { "type": "string", "description": "Tier selected" },
+        "baseFare": { "type": "number", "description": "Base pickup fare" },
+        "distanceFare": { "type": "number", "description": "Distance fee" },
+        "serviceFee": { "type": "number", "description": "Platform service fee" },
+        "tip": { "type": "number", "description": "Driver tip amount" },
+        "discount": { "type": "number", "description": "Promo discount applied" },
+        "totalPaid": { "type": "number", "description": "Total amount charged in USD" },
+        "paymentMethodType": { "type": "string", "description": "Payment type used" },
+        "paymentLastFour": { "type": "string", "description": "Card last 4 digits if card" },
+        "transactionId": { "type": "string", "description": "Unique payment gateway transaction ID" },
+        "driverName": { "type": "string", "description": "Driver name" },
+        "carModel": { "type": "string", "description": "Car model" },
+        "distanceKm": { "type": "number", "description": "Distance traveled in kilometers" },
+        "durationMinutes": { "type": "number", "description": "Trip duration in minutes" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp submitted as FieldValue.serverTimestamp()" }
+      },
+      "required": ["userId", "rideId", "totalPaid", "transactionId", "createdAt"]
+    },
+    "SavedPlace": {
+      "title": "Saved Place",
+      "description": "Quick access location (Home, Work, Gym)",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner UID" },
+        "title": { "type": "string", "description": "Custom label e.g. Home, Work" },
+        "address": { "type": "string", "description": "Formatted address" },
+        "lat": { "type": "number", "description": "Latitude" },
+        "lng": { "type": "number", "description": "Longitude" },
+        "iconType": { "type": "string", "description": "home, work, star, pin" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp submitted as FieldValue.serverTimestamp()" }
+      },
+      "required": ["userId", "title", "address", "lat", "lng", "iconType", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "User" },
+      "description": "Individual passenger and driver profile documents"
+    },
+    "/users/{userId}/rides/{rideId}": {
+      "schema": { "$ref": "Ride" },
+      "description": "Rides booked by the passenger or serviced by driver"
+    },
+    "/users/{userId}/paymentMethods/{paymentMethodId}": {
+      "schema": { "$ref": "PaymentMethod" },
+      "description": "User saved payment methods and cards"
+    },
+    "/users/{userId}/receipts/{receiptId}": {
+      "schema": { "$ref": "Receipt" },
+      "description": "Digital receipts generated upon ride completion"
+    },
+    "/users/{userId}/savedPlaces/{placeId}": {
+      "schema": { "$ref": "SavedPlace" },
+      "description": "Frequently used addresses saved by user"
+    }
+  }
+}

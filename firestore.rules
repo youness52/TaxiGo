@@ -1,0 +1,237 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny all access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidUser(data) {
+      return data.userId is string && data.userId.size() > 0 && data.userId.size() <= 128 &&
+             data.displayName is string && data.displayName.size() > 0 && data.displayName.size() <= 100 &&
+             data.email is string && data.email.size() <= 120 &&
+             (!('phoneNumber' in data) || (data.phoneNumber is string && data.phoneNumber.size() <= 30)) &&
+             data.walletBalance is number && data.walletBalance >= 0.0 &&
+             (!('rating' in data) || (data.rating is number && data.rating >= 0.0 && data.rating <= 5.0)) &&
+             (!('totalRides' in data) || (data.totalRides is number && data.totalRides >= 0)) &&
+             (!('role' in data) || (data.role is string && (data.role == 'passenger' || data.role == 'driver'))) &&
+             (!('isOnline' in data) || data.isOnline is bool) &&
+             (!('driverVehicle' in data) || (data.driverVehicle is string && data.driverVehicle.size() <= 100)) &&
+             (!('driverEarnings' in data) || data.driverEarnings is number) &&
+             (!('driverTrips' in data) || data.driverTrips is number) &&
+             (!('updatedAt' in data) || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    function isValidRide(data) {
+      return data.userId is string && data.userId.size() > 0 && data.userId.size() <= 128 &&
+             data.pickupAddress is string && data.pickupAddress.size() > 0 && data.pickupAddress.size() <= 200 &&
+             data.destinationAddress is string && data.destinationAddress.size() > 0 && data.destinationAddress.size() <= 200 &&
+             (!('pickupLat' in data) || data.pickupLat is number) &&
+             (!('pickupLng' in data) || data.pickupLng is number) &&
+             (!('destinationLat' in data) || data.destinationLat is number) &&
+             (!('destinationLng' in data) || data.destinationLng is number) &&
+             data.rideTier is string && data.rideTier.size() <= 40 &&
+             data.fare is number && data.fare >= 0.0 &&
+             (!('offeredFare' in data) || (data.offeredFare is number && data.offeredFare >= 0.0)) &&
+             (!('tip' in data) || (data.tip is number && data.tip >= 0.0)) &&
+             data.paymentMethod is string && data.paymentMethod.size() <= 30 &&
+             data.status is string && data.status.size() <= 30 &&
+             (!('driverId' in data) || (data.driverId is string && data.driverId.size() <= 128)) &&
+             (!('driverName' in data) || (data.driverName is string && data.driverName.size() <= 100)) &&
+             (!('driverRating' in data) || (data.driverRating is number && data.driverRating >= 0.0 && data.driverRating <= 5.0)) &&
+             (!('driverPhone' in data) || (data.driverPhone is string && data.driverPhone.size() <= 30)) &&
+             (!('carModel' in data) || (data.carModel is string && data.carModel.size() <= 100)) &&
+             (!('carColor' in data) || (data.carColor is string && data.carColor.size() <= 40)) &&
+             (!('licensePlate' in data) || (data.licensePlate is string && data.licensePlate.size() <= 20)) &&
+             (!('passengerName' in data) || (data.passengerName is string && data.passengerName.size() <= 100)) &&
+             (!('passengerRating' in data) || (data.passengerRating is number && data.passengerRating >= 0.0 && data.passengerRating <= 5.0)) &&
+             (!('driverLat' in data) || data.driverLat is number) &&
+             (!('driverLng' in data) || data.driverLng is number) &&
+             (!('etaMinutes' in data) || data.etaMinutes is number) &&
+             (!('speedKmh' in data) || data.speedKmh is number) &&
+             (!('ratingGiven' in data) || (data.ratingGiven is number && data.ratingGiven >= 0.0 && data.ratingGiven <= 5.0)) &&
+             (!('updatedAt' in data) || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    function isValidPaymentMethod(data) {
+      return data.userId is string && data.userId.size() > 0 && data.userId.size() <= 128 &&
+             data.type is string && data.type.size() <= 30 &&
+             (!('cardBrand' in data) || (data.cardBrand is string && data.cardBrand.size() <= 30)) &&
+             (!('lastFour' in data) || (data.lastFour is string && data.lastFour.size() <= 4)) &&
+             (!('expiryMonth' in data) || (data.expiryMonth is string && data.expiryMonth.size() <= 2)) &&
+             (!('expiryYear' in data) || (data.expiryYear is string && data.expiryYear.size() <= 4)) &&
+             (!('cardholderName' in data) || (data.cardholderName is string && data.cardholderName.size() <= 100)) &&
+             data.isDefault is bool &&
+             (!('updatedAt' in data) || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    function isValidReceipt(data) {
+      return data.userId is string && data.userId.size() > 0 && data.userId.size() <= 128 &&
+             data.rideId is string && data.rideId.size() > 0 && data.rideId.size() <= 128 &&
+             (!('pickupAddress' in data) || (data.pickupAddress is string && data.pickupAddress.size() <= 200)) &&
+             (!('destinationAddress' in data) || (data.destinationAddress is string && data.destinationAddress.size() <= 200)) &&
+             (!('rideTier' in data) || (data.rideTier is string && data.rideTier.size() <= 40)) &&
+             (!('baseFare' in data) || data.baseFare is number) &&
+             (!('distanceFare' in data) || data.distanceFare is number) &&
+             (!('serviceFee' in data) || data.serviceFee is number) &&
+             (!('tip' in data) || data.tip is number) &&
+             (!('discount' in data) || data.discount is number) &&
+             data.totalPaid is number && data.totalPaid >= 0.0 &&
+             (!('paymentMethodType' in data) || (data.paymentMethodType is string && data.paymentMethodType.size() <= 30)) &&
+             (!('paymentLastFour' in data) || (data.paymentLastFour is string && data.paymentLastFour.size() <= 4)) &&
+             data.transactionId is string && data.transactionId.size() > 0 && data.transactionId.size() <= 64 &&
+             (!('driverName' in data) || (data.driverName is string && data.driverName.size() <= 100)) &&
+             (!('carModel' in data) || (data.carModel is string && data.carModel.size() <= 100)) &&
+             (!('distanceKm' in data) || data.distanceKm is number) &&
+             (!('durationMinutes' in data) || data.durationMinutes is number);
+    }
+
+    function isValidSavedPlace(data) {
+      return data.userId is string && data.userId.size() > 0 && data.userId.size() <= 128 &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 60 &&
+             data.address is string && data.address.size() > 0 && data.address.size() <= 200 &&
+             data.lat is number && data.lng is number &&
+             data.iconType is string && data.iconType.size() <= 30 &&
+             (!('updatedAt' in data) || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    // User Profile Rules
+    match /users/{userId} {
+      allow get, list: if isSignedIn() && request.auth.uid == userId;
+
+      allow create: if isSignedIn() &&
+                       request.auth.uid == userId &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().keys().hasAll(['userId', 'displayName', 'email', 'walletBalance', 'createdAt']) &&
+                       incoming().keys().hasOnly(['userId', 'displayName', 'email', 'phoneNumber', 'walletBalance', 'rating', 'totalRides', 'role', 'isOnline', 'driverVehicle', 'driverEarnings', 'driverTrips', 'createdAt', 'updatedAt']) &&
+                       incoming().createdAt is timestamp &&
+                       incoming().createdAt <= request.time &&
+                       isValidUser(incoming());
+
+      allow update: if isSignedIn() &&
+                       request.auth.uid == userId &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       isValidUser(incoming()) &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'displayName', 'phoneNumber', 'walletBalance', 'rating', 'totalRides',
+                         'role', 'isOnline', 'driverVehicle', 'driverEarnings', 'driverTrips', 'updatedAt'
+                       ]);
+
+      allow delete: if isSignedIn() && request.auth.uid == userId;
+
+      // Subcollection: Rides
+      match /rides/{rideId} {
+        allow get, list: if isSignedIn() && request.auth.uid == userId;
+
+        allow create: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         isValidId(rideId) &&
+                         incoming().userId == request.auth.uid &&
+                         incoming().keys().hasAll(['userId', 'pickupAddress', 'destinationAddress', 'rideTier', 'fare', 'paymentMethod', 'status', 'createdAt']) &&
+                         incoming().createdAt is timestamp &&
+                         incoming().createdAt <= request.time &&
+                         isValidRide(incoming());
+
+        allow update: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         isValidId(rideId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidRide(incoming()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly([
+                           'status', 'fare', 'offeredFare', 'tip', 'driverId', 'driverName', 'driverRating', 'driverPhone',
+                           'carModel', 'carColor', 'licensePlate', 'passengerName', 'passengerRating',
+                           'driverLat', 'driverLng', 'etaMinutes', 'speedKmh', 'ratingGiven', 'updatedAt'
+                         ]);
+
+        allow delete: if isSignedIn() && request.auth.uid == userId && isValidId(rideId);
+      }
+
+      // Subcollection: Payment Methods
+      match /paymentMethods/{paymentMethodId} {
+        allow get, list: if isSignedIn() && request.auth.uid == userId;
+
+        allow create: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         isValidId(paymentMethodId) &&
+                         incoming().userId == request.auth.uid &&
+                         incoming().keys().hasAll(['userId', 'type', 'isDefault', 'createdAt']) &&
+                         incoming().createdAt is timestamp &&
+                         incoming().createdAt <= request.time &&
+                         isValidPaymentMethod(incoming());
+
+        allow update: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         isValidId(paymentMethodId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidPaymentMethod(incoming()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['isDefault', 'cardholderName', 'expiryMonth', 'expiryYear', 'updatedAt']);
+
+        allow delete: if isSignedIn() && request.auth.uid == userId && isValidId(paymentMethodId);
+      }
+
+      // Subcollection: Receipts (Immutable append-only invoice confirmations)
+      match /receipts/{receiptId} {
+        allow get, list: if isSignedIn() && request.auth.uid == userId;
+
+        allow create: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         isValidId(receiptId) &&
+                         incoming().userId == request.auth.uid &&
+                         incoming().keys().hasAll(['userId', 'rideId', 'totalPaid', 'transactionId', 'createdAt']) &&
+                         incoming().createdAt is timestamp &&
+                         incoming().createdAt <= request.time &&
+                         isValidReceipt(incoming());
+
+        allow update: if false; // Invoices are immutable
+
+        allow delete: if isSignedIn() && request.auth.uid == userId && isValidId(receiptId);
+      }
+
+      // Subcollection: Saved Places
+      match /savedPlaces/{placeId} {
+        allow get, list: if isSignedIn() && request.auth.uid == userId;
+
+        allow create: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         isValidId(placeId) &&
+                         incoming().userId == request.auth.uid &&
+                         incoming().keys().hasAll(['userId', 'title', 'address', 'lat', 'lng', 'iconType', 'createdAt']) &&
+                         incoming().createdAt is timestamp &&
+                         incoming().createdAt <= request.time &&
+                         isValidSavedPlace(incoming());
+
+        allow update: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         isValidId(placeId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidSavedPlace(incoming()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['title', 'address', 'lat', 'lng', 'iconType', 'updatedAt']);
+
+        allow delete: if isSignedIn() && request.auth.uid == userId && isValidId(placeId);
+      }
+    }
+  }
+}

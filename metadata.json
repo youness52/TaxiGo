@@ -1,0 +1,6 @@
+{
+  "name": "TaxiGo",
+  "description": "inDrive-style mobility app featuring Passenger vs Driver role selection, real GPS tile mapping, passenger fare bidding, live driver counter-offers, and integrated payments.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
